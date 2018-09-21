@@ -1,25 +1,22 @@
-####################################################################################
-# Comparison of Cell-Type Proportions Statistical Tests
+# Comparison of Cell-Type Proportions by Statistical Tests
 # Script author: David Chen
 # Date: 09/24/17; 04/13/18
 # Notes:
-####################################################################################
 
-rm(list=ls())
-
-library(ggplot2)
-library(lme4); library(lmerTest)
-library(matrixStats)
-library(reshape2)
-library(doParallel); registerDoParallel(detectCores() - 1)
-
-## Load master covariate file:
-load("~/Dropbox (Christensen Lab)/Christensen Lab - 2017/Armstrong_CF_project/112017_MasterCovariates_BAL.RData");
-
-## Re-order factor level:
-masterCovar$Status <- factor(masterCovar$Status, levels=c("H","CF"));
+rm(list=ls());
+library(ggplot2);
+library(lme4); library(lmerTest);
+library(matrixStats);
+library(reshape2);
+library(doParallel); registerDoParallel(detectCores() - 1);
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path));
+source("HelperFunctionsAndPlotThemes.R");
+DATA_PATH <- "~/Dropbox (Christensen Lab)/Christensen Lab - 2017/Armstrong_CF_project/";
 
 #-----------------------------------------------Statistical tests-----------------------------------------------
+load(paste0(DATA_PATH, "112017_MasterCovariates_BAL.RData"));
+masterCovar$Status <- factor(masterCovar$Status, levels=c("H","CF")); #reorder factor level
+
 fit.CT1 <- lmer(
   CellType1 ~ (1 | Subject) + Status + Age + Sex,
   masterCovar
@@ -58,7 +55,7 @@ summary(fit.CT2)
 ## SexM        -0.27046    0.13034  3.99999  -2.075   0.1066  
 
 #-----------------------------------------------Data visualization-----------------------------------------------
-plt.myOmega <- masterCovar[ , c("Sample_Name","CellType1","CellType2","Status", "Lobe")];
+plt.myOmega <- masterCovar[ , c("Sample_Name","CellType1","CellType2","Status","Lobe")];
 plt.myOmega <- melt(plt.myOmega);
 
 plt.myOmega$Status <- gsub("CF", "Cystic fibrosis (CF)", plt.myOmega$Status);
@@ -74,12 +71,7 @@ ggplot(plt.myOmega, aes(x=variable, y=value, color=Status)) +
   scale_color_manual(values=c("red","blue")) +
   scale_y_continuous(limits=c(0,1.06)) +
   labs(y="Proportion") +
-  theme_classic() +
-  theme(
-    axis.text.x=element_text(size=20,color="black"), axis.title.x=element_blank(),
-    axis.text.y=element_text(size=20,color="black"), axis.title.y=element_text(size=20,color="black"),
-    legend.text=element_text(size=20,color="black",face="bold"), legend.title=element_blank(), legend.position="top"
-  ) +
+  myBoxplotTheme +
   
   geom_segment(aes(x=0.81, y=1.0, xend=1.19, yend=1.0), size=0.3, inherit.aes=F) +
   geom_segment(aes(x=0.81, y=0.95, xend=0.81, yend=1.0), size=0.3, inherit.aes=F) +
